@@ -49,8 +49,14 @@ int main(int argc, char* argv[]){
         std::string s(1,char(i));
         dict[s] = i;
     }
-
-    std::string(*encode)(int) = encode_omega;
+    
+    std::string(*encode)(int);
+    switch (argv[3][1]){
+        case 'o': encode = encode_omega; break;
+        case 'g': encode = encode_gamma; break;
+        case 'd': encode = encode_delta; break;
+        case 'f': encode = encode_fib; break;
+    }
 
     while(source >> std::noskipws >> curr_char){
         std::string char_string(1,curr_char);

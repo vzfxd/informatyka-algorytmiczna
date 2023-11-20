@@ -25,7 +25,13 @@ int main(int argc, char* argv[]){
         dict[i] = char(i);
     }
 
-    std::vector<int>(*decode)(std::string) = decode_omega;
+    std::vector<int>(*decode)(std::string);
+    switch (argv[3][1]){
+        case 'o': decode = decode_omega; break;
+        case 'g': decode = decode_gamma; break;
+        case 'd': decode = decode_delta; break;
+        case 'f': decode = decode_fib; break;
+    }
 
     while(source >> std::noskipws >> curr_char){
         buffer.append(std::bitset<8>(curr_char).to_string());

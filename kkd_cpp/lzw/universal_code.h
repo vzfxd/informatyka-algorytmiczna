@@ -48,8 +48,9 @@ std::vector<int> decode_omega(std::string code){
         n = 1;
 
         while (i < size && code[i] != '0') {
-            i += n + 1;
-            n = bin_to_dec(code.substr(i - n - 1, n + 1));
+            int len = n + 1;
+            n = bin_to_dec(code.substr(i, n + 1));
+            i += len;
         }
 
         if (i <= size) {
@@ -62,11 +63,73 @@ std::vector<int> decode_omega(std::string code){
 }
 
 std::string encode_fib(int n){
+    std::string result;
+        int currFib = 1;
+        int prevFib = 1;
+        int temp;
 
+    while (currFib <= n) {
+        temp = currFib;
+        currFib += prevFib;
+        prevFib = temp;
+    }
+
+    temp = prevFib;
+    prevFib = currFib - prevFib;
+    currFib = temp;
+
+    while (prevFib > 0) {
+        if (currFib <= n) {
+            result.insert(0,"1");
+            n -= currFib;
+        } else {
+            result.insert(0,"0");
+        }
+
+        temp = prevFib;
+        prevFib = currFib - prevFib;
+        currFib = temp;
+    }
+
+    return result + "1";
 }
 
 std::vector<int> decode_fib(std::string code){
+    std::vector<int> result;
+    int size = code.size();
+    int i = 0;
+    int n = 0;
+    int curr = 1;
+    int prev = 1;
+    int temp;
 
+    while (code[size - 1] == '0'){
+        code.pop_back();
+        size--;
+    }
+
+    while (i < size){
+        n = 0;
+        prev = 1;
+        curr = 1;
+
+        while (code[i] == '0' || code[i + 1] == '0'){
+            if (code[i] == '1'){
+                n += curr;
+            }
+                
+
+            temp = curr;
+            curr += prev;
+            prev = temp;
+            i++;
+        }
+
+        result.push_back(n + curr);
+        i += 2;
+    }
+
+    return result;
 }
 
 std::string encode_gamma(int n) {
