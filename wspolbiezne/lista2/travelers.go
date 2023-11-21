@@ -167,7 +167,6 @@ func wild_traveler(grid [][]Node, y int, x int, spawn time.Time, req_chan chan R
 				}
 				request.rep_chan <- Response{allowed: can_leave}
 				if kys {
-					fmt.Print("dziki sie zabija\n")
 					return
 				}
 			}
@@ -238,7 +237,6 @@ func traveler_life(id string, grid [][]Node, traces [][]int) {
 					prev_node.requests <- Request{
 						leave: true,
 					}
-					fmt.Printf("%s sie zabija\n", id)
 					return
 				}
 			}
