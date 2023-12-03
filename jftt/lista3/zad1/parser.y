@@ -33,7 +33,7 @@ int euklides(int a, int P, int &x, int &y) {
 }
 
 int sub_p(int a, int b, int P){
-	b = P - b;
+	b = (P - b) % P;
 	return (a + b) % P;
 }
 
@@ -78,8 +78,8 @@ int pow_p(int base, int exponent, int P) {
 %token 		NUM ERR
 %left 		'+' '-'
 %left 		'*' '/'
-%precedence 	NEG
 %nonassoc 	'^'
+%precedence 	NEG
 
 
 %%

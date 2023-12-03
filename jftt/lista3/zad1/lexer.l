@@ -8,6 +8,7 @@
 %%
 <INITIAL>{
     ^\n               ;
+    " "               ;
     ^#                {BEGIN(COMMENT);}
     ([0-9])+          {yylval = atoi(yytext); return NUM;}
     [+\-*/\^\(\)]|\n  {return *yytext;}
