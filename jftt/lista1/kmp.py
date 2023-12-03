@@ -4,12 +4,12 @@ def computePrefixFunction(P):
     m = len(P)
     pi = [i for i in range(m)]
     k = 0
-    for q in range(1, m):
-        while(k > 0 and P[k] != P[q]):
-            k = pi[k-1]
-        if(P[k] == P[q]):
+    for q in range(2, m+1):
+        while(k > 0 and P[k] != P[q-1]):
+            k = pi[k]
+        if(P[k] == P[q-1]):
             k = k+1
-        pi[q] = k
+        pi[q-1] = k
     return pi
 
 def kmpMatcher(T,P):
