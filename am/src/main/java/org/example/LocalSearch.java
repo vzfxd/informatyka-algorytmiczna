@@ -1,6 +1,6 @@
 package org.example;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class LocalSearch {
@@ -49,6 +49,91 @@ public class LocalSearch {
 
         int new_cycle = distMatrix[first_v][last_v];
         return currWeight - old_w + new_w + new_cycle - old_cycle;
+    }
+
+    public static int simulatedAnnealing(List<Integer> perm, int[][] distMatrix, double T, double deltaT, int iter){
+        SplittableRandom random = new SplittableRandom();
+        int n = perm.size();
+        int w = calcWeight(perm,distMatrix) + distMatrix[perm.get(n-1)][perm.get(0)];
+        int best_w = w;
+        int without_impr = 0;
+
+        while(true){
+            int best_in_epoch = Integer.MAX_VALUE;
+            for(int i=0; i<n; i++){
+                for(int j=i+1; j<n; j++){
+                    int curr_neighbor_w = weightAfterInvert(perm,i,j,distMatrix,w);
+                    if(curr_neighbor_w < best_in_epoch){
+                        best_in_epoch = curr_neighbor_w;
+                    }
+
+                    if(curr_neighbor_w < w || random.nextDouble() < Math.exp((w-curr_neighbor_w)/T)){
+                        invert(perm,i,j);
+                        w = curr_neighbor_w;
+                    }
+                }
+            }
+            if(best_in_epoch < best_w){
+                best_w = best_in_epoch;
+                without_impr=0;
+            }else{
+                without_impr++;
+            }
+
+            if(iter==without_impr){
+                break;
+            }
+            T *= deltaT;
+        }
+        return best_w;
+    }
+
+    public static int tabuSearch(List<Integer> perm, int[][] distMatrix, int iter){
+        SplittableRandom random = new SplittableRandom();
+        int i_best = 0;
+        int j_best = 0;
+        int n = perm.size();
+        int w = calcWeight(perm,distMatrix) + distMatrix[perm.get(n-1)][perm.get(0)];
+        int best_w = w;
+        int without_improv = 0;
+        Set<List<Integer>> tabu = new HashSet<>();
+
+        while(true){
+            int best_neighor_w = Integer.MAX_VALUE;
+
+            for(int k = 0; k<n; k++){
+                int i = random.nextInt(0, n-1);
+                int j = random.nextInt(i+1, n);
+                int curr_neighbor_w = weightAfterInvert(perm,i,j,distMatrix,w);
+                if(curr_neighbor_w < best_neighor_w){
+                    List<Integer> currPerm = new ArrayList<>(perm);
+                    invert(currPerm,i,j);
+                    if(!tabu.contains(currPerm)){
+                        best_neighor_w = curr_neighbor_w;
+                        i_best = i;
+                        j_best = j;
+                    }
+                }
+            }
+
+            List<Integer> best_local_perm = new ArrayList<>(perm);
+            invert(best_local_perm,i_best,j_best);
+            tabu.add(best_local_perm);
+            perm = best_local_perm;
+            w = best_neighor_w;
+
+            if(w < best_w){
+                best_w = w;
+                without_improv = 0;
+            }else{
+                without_improv++;
+            }
+
+            if(without_improv==iter){
+                break;
+            }
+        }
+        return best_w;
     }
 
     private static int calcWeight(List<Integer> perm, int[][] distMatrix){
@@ -102,8 +187,8 @@ public class LocalSearch {
             int best_neighor_w = w;
 
             for (int k = 0; k < iters; k++) {
-                int i = ThreadLocalRandom.current().nextInt(0, n-2);
-                int j = ThreadLocalRandom.current().nextInt(i+1, n-1);;
+                int i = ThreadLocalRandom.current().nextInt(0, n-1);
+                int j = ThreadLocalRandom.current().nextInt(i+1, n);
 
                 int curr_neighbor_w = weightAfterInvert(perm,i,j,distMatrix,w);
                 if(curr_neighbor_w < best_neighor_w){
