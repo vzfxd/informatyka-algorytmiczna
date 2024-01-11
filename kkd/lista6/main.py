@@ -1,4 +1,4 @@
-import sys
+import sys,math
 
 def read_tga(filename):
     with open(filename, "br") as f:
@@ -80,17 +80,17 @@ def quantizer_encoding(bitmap, bits,diff=False):
     if(diff):
         min,max=-255,255
         r,g,b = diff_list(r),diff_list(g),diff_list(b)
-
+        
     r_c, rc_idx = nonuniform_quantizer(r, bits, min, max)
     g_c, gc_idx = nonuniform_quantizer(g, bits, min, max)
     b_c, bc_idx = nonuniform_quantizer(b, bits, min, max)
-    
+   
     r_a = [rc_idx[c-min] for c in r]
     g_a = [gc_idx[c-min] for c in g]
     b_a = [bc_idx[c-min] for c in b]
     c_idx = r_a + g_a + b_a
     
-    buff = bin(bits)[2:].zfill(8)
+    buff = bin(bits)[2:].zfill(8) + ''.join([bin(len(c))[2:].zfill(8) for c in [r_c,g_c,b_c]])
     if(diff):
         buff += ''.join(['1' + bin(abs(c))[2:].zfill(8) if c<0 else '0' + bin(c)[2:].zfill(8) for c in r_c+g_c+b_c])
     else:
@@ -99,19 +99,25 @@ def quantizer_encoding(bitmap, bits,diff=False):
     return buff + ''.join([bin(c)[2:].zfill(bits) for c in c_idx])
 
 def quantizer_decoding(file,diff=False):
-    buff, header, bits = read_encoded(file)
+    with open(file, "br") as f:
+        header = list(map(int, f.read(18)))
+        bits = int.from_bytes(f.read(1),byteorder='big')
+        r_c_amount = int.from_bytes(f.read(1),byteorder='big')
+        g_c_amount = int.from_bytes(f.read(1),byteorder='big')
+        b_c_amount = int.from_bytes(f.read(1),byteorder='big')
+        buff = ''.join([bin(byte)[2:].zfill(8) for byte in f.read()])
     
     centroids = None
     if(diff):
-        centroid_bits = 2**bits*3*9
+        centroid_bits = (r_c_amount + g_c_amount + b_c_amount) * 9
         centroids = [int(el[1:], 2) if el[0] == '0' else -int(el[1:], 2) for el in [buff[i:i+9] for i in range(0, centroid_bits, 9)]]
     else:
-        centroid_bits = 2**bits*3*8
+        centroid_bits = (r_c_amount + g_c_amount + b_c_amount) * 8
         centroids = [int(buff[i:i+8], 2) for i in range(0, centroid_bits, 8)]
 
-    r_c = [c for c in centroids[:len(centroids)//3]]
-    g_c = [c for c in centroids[len(centroids)//3 : 2*len(centroids)//3]]
-    b_c = [c for c in centroids[2*len(centroids)//3:]]
+    r_c = [c for c in centroids[:r_c_amount]]
+    g_c = [c for c in centroids[r_c_amount:r_c_amount + g_c_amount]]
+    b_c = [c for c in centroids[r_c_amount + g_c_amount:]]
 
     buff = buff[centroid_bits:]
     c_idx = [int(buff[i:i+bits], 2) for i in range(0, len(buff), bits)]
@@ -137,10 +143,7 @@ def nonuniform_quantizer(values, bits, min_p, max):
     for v in values:
         freq[v-min_p] += 1
 
-    intervals = {(i, i+1) : freq[i-min_p]+freq[i-min_p+1] for i in range(min_p,max,2)}
-    for key, value in list(intervals.items()):
-        if value == 0:
-            del intervals[key]
+    intervals = {(i, i) : freq[i-min_p] for i in range(min_p,max) if freq[i-min_p] != 0}
 
     while len(intervals) > n:
         min_interval = min(intervals, key=intervals.get)
@@ -168,61 +171,21 @@ def nonuniform_quantizer(values, bits, min_p, max):
         del intervals[to_join]
         intervals = dict(sorted(intervals.items()))
 
-    while len(intervals) < n:
-        intervals = dict(sorted(intervals.items(), key=lambda item: item[1], reverse=True))
-        dict_list = list(intervals)
-        k = 0
-        max_interval = dict_list[k]
-        while(max_interval[0] == max_interval[1] and k<len(dict_list)):
-            max_interval = dict_list[k]
-            k += 1
-        if(k==len(dict_list)):
-            intervals = dict(sorted(intervals.items()))
-            break
-
-        c = (max_interval[0] + max_interval[1])//2
-        left_interval = (max_interval[0],c)
-        right_interval = (c+1,max_interval[1])
-        left_val = 0
-        right_val = 0
-        for i in range(max_interval[0],c+1):
-            left_val += freq[i-min_p]
-        for i in range(c+1,max_interval[1]+1):
-            right_val += freq[i-min_p]
-
-        if(left_val != 0):
-            intervals[left_interval] = left_val
-        if(right_val != 0):
-            intervals[right_interval] = right_val
-        
-        del intervals[max_interval]
-        intervals = dict(sorted(intervals.items()))
-
     centroids = []
     for i in intervals:
         cluster = []
         for j in range(i[0],i[1]+1):
             cluster += [j for _ in range(freq[j-min_p])]
         centroids.append(cluster[len(cluster)//2])
-    
-    for i in range(n-len(centroids)):
-        centroids.append(255)
 
     labels= [None for _ in range(min_p,max+1)]
     c_idx = 0
     for i in range(min_p, max+1):
-        if(c_idx+1<n and abs(centroids[c_idx+1]-i) <= abs(centroids[c_idx]-i)):
+        if(c_idx+1<len(centroids) and abs(centroids[c_idx+1]-i) <= abs(centroids[c_idx]-i)):
             c_idx+=1
         labels[i-min_p] = c_idx
     
     return centroids, labels
-
-def read_encoded(file_in):
-    with open(file_in, "br") as f:
-        header = list(map(int, f.read(18)))
-        bits = int.from_bytes(f.read(1),byteorder='big')
-        buff = ''.join([bin(byte)[2:].zfill(8) for byte in f.read()])
-    return buff, header, bits  
 
 def save_to_file(buff, header, file_out):
     bytes_list = bytes([int(buff[i:i+8],2) for i in range(0, len(buff), 8)])
