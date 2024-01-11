@@ -31,20 +31,16 @@ class Pixel:
 def apply_filter(m, i, j, matrix):
     cords = [(0,0),(-1,0),(1,0),(0,-1),(0,1),(-1,-1),(-1,1),(1,-1),(1,1)]
     color = 0
-    n = 0
-    
+    w = 0
     for cord in cords:
         y = cord[0] + i
         x = cord[1] + j
         if(y<0 or y>=len(m) or x<0 or x>=len(m[0])):
             continue
-        n += 1
-        color += ( m[y][x] * matrix[cord[0]+1][cord[1]+1] )
+        w += matrix[cord[0]+1][cord[1]+1]
+        color += m[y][x] * matrix[cord[0]+1][cord[1]+1]
     
-    if(matrix[1][1] == 1):
-        color //= n
-
-    return max(min(color,255),0)
+    return max(min(color//w,255),0)
 
 def filter(map, matrix):
     r, g, b = Pixel.get_color_bitmap_2d(map,'r'),Pixel.get_color_bitmap_2d(map,'g'),Pixel.get_color_bitmap_2d(map,'b')
@@ -62,10 +58,10 @@ def filter(map, matrix):
     return filtered
 
 def get_colors_from_diff_list(diff_list):
-    c = diff_list[0]
+    c = max(min(diff_list[0],255),0)
     colors = [c]
     for diff in diff_list[1:]:
-        c += diff
+        c = max(min(c+diff,255),0)
         colors.append(c)
     return colors
 
@@ -75,80 +71,79 @@ def diff_list(colors):
     for c2 in colors[1:]:
         diff.append(c2-c)
         c = c2
-    return diff
+    return diff    
 
-def differential_encoding(bitmap):
+def quantizer_encoding(bitmap, bits,diff=False):
     r, g, b = Pixel.get_color_bitmap_1d(bitmap,'r'),Pixel.get_color_bitmap_1d(bitmap,'g'),Pixel.get_color_bitmap_1d(bitmap,'b')
+    min,max=0,255
 
-    buff = ['1' + bin(abs(diff))[2:].zfill(8) if diff < 0 
-            else '0' + bin(abs(diff))[2:].zfill(8)
-            for color in [diff_list(r), diff_list(g), diff_list(b)] for diff in color]
-            
-    return ''.join(buff)
+    if(diff):
+        min,max=-255,255
+        r,g,b = diff_list(r),diff_list(g),diff_list(b)
 
-def differential_decoding(file):
-    buff, header = read_encoded(file)
-
-    diffs = [int(diff[1:], 2) if diff[0] == '0' 
-            else -int(diff[1:], 2) 
-            for diff in [buff[i:i+9] for i in range(0, len(buff), 9)]]
+    r_c, rc_idx = nonuniform_quantizer(r, bits, min, max)
+    g_c, gc_idx = nonuniform_quantizer(g, bits, min, max)
+    b_c, bc_idx = nonuniform_quantizer(b, bits, min, max)
     
-    diff_r = [d for d in diffs[0 : len(diffs)//3]]
-    diff_g = [d for d in diffs[len(diffs)//3 : 2*len(diffs)//3]]
-    diff_b = [d for d in diffs[2*len(diffs)//3 :]]
-    
-    bitmap = [channel for sublist in 
-            zip(get_colors_from_diff_list(diff_r), get_colors_from_diff_list(diff_g), get_colors_from_diff_list(diff_b))
-            for channel in sublist]
-
-    return bitmap, header
-
-def quantizer_encoding(bitmap, bits):
-    r, g, b = Pixel.get_color_bitmap_1d(bitmap,'r'),Pixel.get_color_bitmap_1d(bitmap,'g'),Pixel.get_color_bitmap_1d(bitmap,'b')
-    
-    r_c, rc_idx = nonuniform_quantizer(r, bits)
-    g_c, gc_idx = nonuniform_quantizer(g, bits)
-    b_c, bc_idx = nonuniform_quantizer(b, bits)
-    
-    r_a = [rc_idx[c] for c in r]
-    g_a = [gc_idx[c] for c in g]
-    b_a = [bc_idx[c] for c in b]
+    r_a = [rc_idx[c-min] for c in r]
+    g_a = [gc_idx[c-min] for c in g]
+    b_a = [bc_idx[c-min] for c in b]
     c_idx = r_a + g_a + b_a
     
     buff = bin(bits)[2:].zfill(8)
-    buff += ''.join([bin(c)[2:].zfill(8) for c in r_c+g_c+b_c])
+    if(diff):
+        buff += ''.join(['1' + bin(abs(c))[2:].zfill(8) if c<0 else '0' + bin(c)[2:].zfill(8) for c in r_c+g_c+b_c])
+    else:
+        buff += ''.join([bin(c)[2:].zfill(8) for c in r_c+g_c+b_c])
+
     return buff + ''.join([bin(c)[2:].zfill(bits) for c in c_idx])
 
-def quantizer_decoding(file):
-    buff, header, bits = read_encoded_quant(file)
+def quantizer_decoding(file,diff=False):
+    buff, header, bits = read_encoded(file)
+    
+    centroids = None
+    if(diff):
+        centroid_bits = 2**bits*3*9
+        centroids = [int(el[1:], 2) if el[0] == '0' else -int(el[1:], 2) for el in [buff[i:i+9] for i in range(0, centroid_bits, 9)]]
+    else:
+        centroid_bits = 2**bits*3*8
+        centroids = [int(buff[i:i+8], 2) for i in range(0, centroid_bits, 8)]
 
-    centroid_bits = 2**bits*3*8
-    centroids = [int(buff[i:i+8], 2) for i in range(0, centroid_bits, 8)]
     r_c = [c for c in centroids[:len(centroids)//3]]
     g_c = [c for c in centroids[len(centroids)//3 : 2*len(centroids)//3]]
     b_c = [c for c in centroids[2*len(centroids)//3:]]
 
     buff = buff[centroid_bits:]
     c_idx = [int(buff[i:i+bits], 2) for i in range(0, len(buff), bits)]
+    
     r = [r_c[idx] for idx in c_idx[:len(c_idx)//3]]
     g = [g_c[idx] for idx in c_idx[len(c_idx)//3 : 2*len(c_idx)//3]]
     b = [b_c[idx] for idx in c_idx[2*len(c_idx)//3:]]
 
-    bitmap = [channel for sublist in zip(r,g,b) for channel in sublist]
- 
+    bitmap = None
+    if(diff):
+        bitmap = [channel for sublist in 
+            zip(get_colors_from_diff_list(r), get_colors_from_diff_list(g), get_colors_from_diff_list(b))
+            for channel in sublist]
+    else:
+        bitmap = [channel for sublist in zip(r,g,b) for channel in sublist]
+    
     return bitmap, header
 
-def nonuniform_quantizer(colors, bits):
+def nonuniform_quantizer(values, bits, min_p, max):
     n = 2**bits
-    freq = {i : 0 for i in range(0, 256)}
+    freq = [0 for _ in range(min_p, max+1)]
     
-    for c in colors:
-        freq[c] += 1
+    for v in values:
+        freq[v-min_p] += 1
 
-    intervals = {(i, i+1) : freq[i]+freq[i+1] for i in freq if i%2 == 0}
+    intervals = {(i, i+1) : freq[i-min_p]+freq[i-min_p+1] for i in range(min_p,max,2)}
+    for key, value in list(intervals.items()):
+        if value == 0:
+            del intervals[key]
 
     while len(intervals) > n:
-        min_interval = sorted(intervals, key=intervals.get)[0]
+        min_interval = min(intervals, key=intervals.get)
         dict_list = list(intervals)
         k = dict_list.index(min_interval)
 
@@ -173,28 +168,61 @@ def nonuniform_quantizer(colors, bits):
         del intervals[to_join]
         intervals = dict(sorted(intervals.items()))
 
-    centroids = [(el[0]+el[1])//2 for el in intervals]
-    pixel_c_idx= [None for _ in range(256)]
-    c_idx = 0
-    for i in range(0, 256):
-        if(c_idx+1<n and abs(centroids[c_idx+1] - i) <= abs(centroids[c_idx] - i)):
-            c_idx+=1
-        pixel_c_idx[i] = c_idx
+    while len(intervals) < n:
+        intervals = dict(sorted(intervals.items(), key=lambda item: item[1], reverse=True))
+        dict_list = list(intervals)
+        k = 0
+        max_interval = dict_list[k]
+        while(max_interval[0] == max_interval[1] and k<len(dict_list)):
+            max_interval = dict_list[k]
+            k += 1
+        if(k==len(dict_list)):
+            intervals = dict(sorted(intervals.items()))
+            break
+
+        c = (max_interval[0] + max_interval[1])//2
+        left_interval = (max_interval[0],c)
+        right_interval = (c+1,max_interval[1])
+        left_val = 0
+        right_val = 0
+        for i in range(max_interval[0],c+1):
+            left_val += freq[i-min_p]
+        for i in range(c+1,max_interval[1]+1):
+            right_val += freq[i-min_p]
+
+        if(left_val != 0):
+            intervals[left_interval] = left_val
+        if(right_val != 0):
+            intervals[right_interval] = right_val
+        
+        del intervals[max_interval]
+        intervals = dict(sorted(intervals.items()))
+
+    centroids = []
+    for i in intervals:
+        cluster = []
+        for j in range(i[0],i[1]+1):
+            cluster += [j for _ in range(freq[j-min_p])]
+        centroids.append(cluster[len(cluster)//2])
     
-    return centroids, pixel_c_idx
+    for i in range(n-len(centroids)):
+        centroids.append(255)
+
+    labels= [None for _ in range(min_p,max+1)]
+    c_idx = 0
+    for i in range(min_p, max+1):
+        if(c_idx+1<n and abs(centroids[c_idx+1]-i) <= abs(centroids[c_idx]-i)):
+            c_idx+=1
+        labels[i-min_p] = c_idx
+    
+    return centroids, labels
 
 def read_encoded(file_in):
     with open(file_in, "br") as f:
         header = list(map(int, f.read(18)))
-        buff = ''.join([bin(byte)[2:].zfill(8) for byte in f.read()])
-    return buff, header
-
-def read_encoded_quant(file_in):
-    with open(file_in, "br") as f:
-        header = list(map(int, f.read(18)))
         bits = int.from_bytes(f.read(1),byteorder='big')
         buff = ''.join([bin(byte)[2:].zfill(8) for byte in f.read()])
-    return buff, header, bits
+    return buff, header, bits  
 
 def save_to_file(buff, header, file_out):
     bytes_list = bytes([int(buff[i:i+8],2) for i in range(0, len(buff), 8)])
@@ -212,16 +240,16 @@ def main():
         
         buff = None
         if(sys.argv[2] == '-h'):
-            buff = quantizer_encoding(filter(bitmap,[[-1,-1,-1],[-1,9,-1],[-1,-1,-1]]), int(sys.argv[5]))
+            buff = quantizer_encoding(filter(bitmap,[[-1,-1,-1],[-1,9,-1],[-1,-1,-1]]),int(sys.argv[5]))
         elif(sys.argv[2] == '-l'):
-            buff = differential_encoding(filter(bitmap,[[1,1,1],[1,1,1],[1,1,1]]))
+            buff = quantizer_encoding(filter(bitmap,[[1,1,1],[1,1,1],[1,1,1]]),int(sys.argv[5]),True)
         
         save_to_file(buff, header, sys.argv[4])
 
     elif sys.argv[1] == '-d':
 
         if sys.argv[2] == '-l':
-            bitmap, header = differential_decoding(sys.argv[3])
+            bitmap, header = quantizer_decoding(sys.argv[3],diff=True)
             with open(sys.argv[4], "wb") as f:
                 f.write(bytes(header) + bytes(bitmap))
 
