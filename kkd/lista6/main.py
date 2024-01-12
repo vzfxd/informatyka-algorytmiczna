@@ -23,15 +23,15 @@ class Pixel:
 
 def filter(bitmap):
     color_channels = ['r', 'g', 'b']
-    result_lower = tuple([(channel[0], *[((channel[idx] + channel[idx-1]) // 2) for idx in range(1, len(channel))]) for channel in [Pixel.get_color_bitmap_1d(bitmap, color) for color in color_channels]])
-    result_upper = tuple([(channel[0], *[((channel[idx] - channel[idx-1]) // 2) for idx in range(1, len(channel))]) for channel in [Pixel.get_color_bitmap_1d(bitmap, color) for color in color_channels]])
+    result_lower = tuple([(channel[0], *[((channel[idx] + channel[idx-1]) // 2) for idx in range(1, len(channel),2)]) for channel in [Pixel.get_color_bitmap_1d(bitmap, color) for color in color_channels]])
+    result_upper = tuple([(channel[0], *[((channel[idx] - channel[idx-1]) // 2) for idx in range(1, len(channel),2)]) for channel in [Pixel.get_color_bitmap_1d(bitmap, color) for color in color_channels]])
     return result_lower, result_upper
 
 def reconstruct_from_diff(y,z):
     c = y[0]
     x = [c]
     for i in range(1,len(y)):
-        x_n = max(min(c+y[i]+z[i],255),0)
+        x_n = max(min(c+y[i],255),0)
         x.append(x_n)
         c += y[i]
     return x
@@ -59,18 +59,28 @@ def encode(low,high,bits,header):
 
     z_r, z_g, z_b = ([quantizer[v] for v in high_channel] for quantizer, high_channel in zip(high_quantizer, [high_r, high_g, high_b]))
 
-    # r, g, b = (reconstruct_from_diff(diff, z) for diff, z in zip([r_diff, g_diff, b_diff], [z_r, z_g, z_b]))
-    # r_w = []
-    # g_w = []
-    # b_w = []
-    # for y,z,l in zip([r,g,b],[z_r,z_g,z_b],[r_w,g_w,b_w]):
-    #     p1 = max(min(y+z,255),0)
-    #     p2 = max(min(y-z,255),0)
-    #     l.extend([p1,p2])
+    r, g, b = (reconstruct_from_diff(diff, z) for diff, z in zip([r_diff, g_diff, b_diff], [z_r, z_g, z_b]))
+    r_w = []
+    g_w = []
+    b_w = []
+    for y,z in zip(r,z_r):
+        p1 = max(min(y+z,255),0)
+        p2 = max(min(y-z,255),0)
+        r_w.extend([p1,p2])
+
+    for y,z in zip(g,z_g):
+        p1 = max(min(y+z,255),0)
+        p2 = max(min(y-z,255),0)
+        g_w.extend([p1,p2])
+
+    for y,z in zip(b,z_b):
+        p1 = max(min(y+z,255),0)
+        p2 = max(min(y-z,255),0)
+        b_w.extend([p1,p2])
     
-    # bitmap = [channel for sublist in zip(r_w, g_w, b_w) for channel in sublist]
-    # with open("test.tga","bw") as f:
-    #     f.write(bytes(header) + bytes(bitmap))
+    bitmap = [channel for sublist in zip(r_w, g_w, b_w) for channel in sublist]
+    with open("test.tga","bw") as f:
+        f.write(bytes(header) + bytes(bitmap))
 
     
     buff = ''.join(['1' + bin(abs(el))[2:].zfill(8) if el < 0 else '0' + bin(abs(el))[2:].zfill(8) for arr in [z_r, z_g, z_b, r_diff, g_diff, b_diff] for el in arr])
