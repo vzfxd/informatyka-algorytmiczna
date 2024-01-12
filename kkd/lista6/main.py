@@ -1,4 +1,4 @@
-import sys,math
+import sys
 
 def read_tga(filename):
     with open(filename, "br") as f:
@@ -47,7 +47,7 @@ def diff_list(colors,quant=None):
         c += d
     return x   
 
-def encode(low,high,bits,header):
+def encode(low,high,bits):
     low_r, low_g, low_b = low
     high_r, high_g, high_b = high
 
@@ -58,11 +58,29 @@ def encode(low,high,bits,header):
     high_quantizer = tuple(nonuniform_quantizer(high_channel, bits, -255, 255) for high_channel in [high_r, high_g, high_b])
 
     z_r, z_g, z_b = ([quantizer[v] for v in high_channel] for quantizer, high_channel in zip(high_quantizer, [high_r, high_g, high_b]))
+    
+    buff = ''.join(['1' + bin(abs(el))[2:].zfill(8) if el < 0 else '0' + bin(abs(el))[2:].zfill(8) for arr in [z_r, z_g, z_b, r_diff, g_diff, b_diff] for el in arr])
+    return buff
+
+def decode(file_in, file_out):
+    with open(file_in,"br") as f:
+        header = list(map(int, f.read(18)))
+        padding = int.from_bytes(f.read(1),byteorder='big')
+        width = header[13]*256+header[12]
+        height = header[15]*256+header[14]
+        chunk = width*height//2+1
+        buff = ''.join([bin(c)[2:].zfill(8) for c in f.read()])
+        buff = buff[:len(buff)-padding]
+
+    data = [int(el[1:], 2) if el[0] == '0' else -int(el[1:], 2) for el in [buff[i:i+9] for i in range(0, len(buff), 9)]]
+    r_diff,g_diff,b_diff,z_r,z_g,z_b = [],[],[],[],[],[] 
+    
+    for i,el in enumerate([z_r,z_g,z_b,r_diff,g_diff,b_diff]):
+        el.extend(data[i*chunk:(i+1)*chunk])
 
     r, g, b = (reconstruct_from_diff(diff, z) for diff, z in zip([r_diff, g_diff, b_diff], [z_r, z_g, z_b]))
-    r_w = []
-    g_w = []
-    b_w = []
+
+    r_w,g_w,b_w = [],[],[]
     for y,z in zip(r,z_r):
         p1 = max(min(y+z,255),0)
         p2 = max(min(y-z,255),0)
@@ -79,30 +97,6 @@ def encode(low,high,bits,header):
         b_w.extend([p1,p2])
     
     bitmap = [channel for sublist in zip(r_w, g_w, b_w) for channel in sublist]
-    with open("test.tga","bw") as f:
-        f.write(bytes(header) + bytes(bitmap))
-
-    
-    buff = ''.join(['1' + bin(abs(el))[2:].zfill(8) if el < 0 else '0' + bin(abs(el))[2:].zfill(8) for arr in [z_r, z_g, z_b, r_diff, g_diff, b_diff] for el in arr])
-    return buff
-
-def decode(file_in, file_out):
-    with open(file_in,"br") as f:
-        header = list(map(int, f.read(18)))
-        padding = int.from_bytes(f.read(1),byteorder='big')
-        width = header[13]*256+header[12]
-        height = header[15]*256+header[14]
-        chunk = width*height
-        buff = ''.join([bin(c)[2:].zfill(8) for c in f.read()])
-        buff = buff[:len(buff)-padding]
-
-    data = [int(el[1:], 2) if el[0] == '0' else -int(el[1:], 2) for el in [buff[i:i+9] for i in range(0, len(buff), 9)]]
-    r_diff,g_diff,b_diff,z_r,z_g,z_b = [],[],[],[],[],[] 
-    for i,el in enumerate([z_r,z_g,z_b,r_diff,g_diff,b_diff]):
-        el.extend(data[i*chunk:(i+1)*chunk])
-    
-    r, g, b = (reconstruct_from_diff(diff, z) for diff, z in zip([r_diff, g_diff, b_diff], [z_r, z_g, z_b]))
-    bitmap = [channel for sublist in zip(r, g, b) for channel in sublist]
 
     with open(file_out, "bw") as f:
         f.write(bytes(header) + bytes(bitmap))
@@ -174,7 +168,7 @@ def main():
     if sys.argv[1] == '-e':
         bitmap, header = read_tga(sys.argv[2])   
         low,high = filter(bitmap)
-        buff = encode(low,high,int(sys.argv[4]),header)
+        buff = encode(low,high,int(sys.argv[4]))
         save_to_file(buff, header, sys.argv[3])
 
     if sys.argv[1] == '-d':
