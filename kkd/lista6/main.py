@@ -28,10 +28,12 @@ def filter(bitmap):
     return result_lower, result_upper
 
 def reconstruct_from_diff(y,z):
-    x = [y[0]]
+    c = y[0]
+    x = [c]
     for i in range(1,len(y)):
-        x_n = max(min(y[i]+y[i-1]-z[i],255),0)
+        x_n = max(min(c+y[i]+z[i],255),0)
         x.append(x_n)
+        c += y[i]
     return x
 
 def diff_list(colors,quant=None):
@@ -42,7 +44,7 @@ def diff_list(colors,quant=None):
         if(quant != None):
             d = quant[d]
         x.append(d)
-        c = d
+        c += d
     return x   
 
 def encode(low,high,bits,header):
@@ -56,9 +58,8 @@ def encode(low,high,bits,header):
     high_quantizer = tuple(nonuniform_quantizer(high_channel, bits, -255, 255) for high_channel in [high_r, high_g, high_b])
 
     z_r, z_g, z_b = ([quantizer[v] for v in high_channel] for quantizer, high_channel in zip(high_quantizer, [high_r, high_g, high_b]))
-
+    
     r, g, b = (reconstruct_from_diff(diff, z) for diff, z in zip([r_diff, g_diff, b_diff], [z_r, z_g, z_b]))
-
     bitmap = [channel for sublist in zip(r, g, b) for channel in sublist]
 
     with open("test.tga", "bw") as f:

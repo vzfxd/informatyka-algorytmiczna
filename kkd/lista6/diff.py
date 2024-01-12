@@ -37,26 +37,20 @@ def calculate_psnr(snr,mse,len):
 
 original,_ = read_tga(sys.argv[1])
 decoded,_ = read_tga(sys.argv[2])
-original_crop = []
-decoded_flat = []
 
-for i, row in enumerate(original[1:-1],1):
-    for j, _ in enumerate(row[1:-1],1):
-        original_crop.append(original[i][j])
+original_flat = [item for row in original for item in row]
+decoded_flat = [item for row in decoded for item in row]
+l = len(decoded_flat)
 
-for row in decoded:
-    decoded_flat.extend(row)
+mse_total,snr_total = calculate_mse_snr(original_flat, decoded_flat)
+mse_red,snr_red = calculate_mse_snr(original_flat, decoded_flat, "red")
+mse_green,snr_green = calculate_mse_snr(original_flat, decoded_flat, "green")
+mse_blue,snr_blue = calculate_mse_snr(original_flat, decoded_flat, "blue")
 
-mse_total,snr_total = calculate_mse_snr(original_crop, decoded_flat)
-mse_red,snr_red = calculate_mse_snr(original_crop, decoded_flat, "red")
-mse_green,snr_green = calculate_mse_snr(original_crop, decoded_flat, "green")
-mse_blue,snr_blue = calculate_mse_snr(original_crop, decoded_flat, "blue")
-
-len = len(decoded_flat)
-psnr_total = calculate_psnr(snr_total,mse_total,len)
-psnr_red = calculate_psnr(snr_red,mse_red,len)
-psnr_green = calculate_psnr(snr_green,mse_green,len)
-psnr_blue = calculate_psnr(snr_blue,mse_blue,len)
+psnr_total = calculate_psnr(snr_total,mse_total,l)
+psnr_red = calculate_psnr(snr_red,mse_red,l)
+psnr_green = calculate_psnr(snr_green,mse_green,l)
+psnr_blue = calculate_psnr(snr_blue,mse_blue,l)
 
 print(f"Błąd średniokwadratowy całego obrazu: {mse_total}")
 print(f"Błąd średniokwadratowy składowej czerwonej: {mse_red}")
