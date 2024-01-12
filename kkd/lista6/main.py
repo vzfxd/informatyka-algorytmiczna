@@ -47,7 +47,7 @@ def diff_list(colors,quant=None):
         c += d
     return x   
 
-def encode(low,high,bits):
+def encode(low,high,bits,header):
     low_r, low_g, low_b = low
     high_r, high_g, high_b = high
 
@@ -58,6 +58,20 @@ def encode(low,high,bits):
     high_quantizer = tuple(nonuniform_quantizer(high_channel, bits, -255, 255) for high_channel in [high_r, high_g, high_b])
 
     z_r, z_g, z_b = ([quantizer[v] for v in high_channel] for quantizer, high_channel in zip(high_quantizer, [high_r, high_g, high_b]))
+
+    # r, g, b = (reconstruct_from_diff(diff, z) for diff, z in zip([r_diff, g_diff, b_diff], [z_r, z_g, z_b]))
+    # r_w = []
+    # g_w = []
+    # b_w = []
+    # for y,z,l in zip([r,g,b],[z_r,z_g,z_b],[r_w,g_w,b_w]):
+    #     p1 = max(min(y+z,255),0)
+    #     p2 = max(min(y-z,255),0)
+    #     l.extend([p1,p2])
+    
+    # bitmap = [channel for sublist in zip(r_w, g_w, b_w) for channel in sublist]
+    # with open("test.tga","bw") as f:
+    #     f.write(bytes(header) + bytes(bitmap))
+
     
     buff = ''.join(['1' + bin(abs(el))[2:].zfill(8) if el < 0 else '0' + bin(abs(el))[2:].zfill(8) for arr in [z_r, z_g, z_b, r_diff, g_diff, b_diff] for el in arr])
     return buff
@@ -150,7 +164,7 @@ def main():
     if sys.argv[1] == '-e':
         bitmap, header = read_tga(sys.argv[2])   
         low,high = filter(bitmap)
-        buff = encode(low,high,int(sys.argv[4]))
+        buff = encode(low,high,int(sys.argv[4]),header)
         save_to_file(buff, header, sys.argv[3])
 
     if sys.argv[1] == '-d':
