@@ -31,7 +31,7 @@ def reconstruct_from_diff(y,z):
     c = y[0]
     x = [c]
     for i in range(1,len(y)):
-        x_n = max(min(c+y[i],255+z[i]),0)
+        x_n = max(min(c+y[i]+z[i],255),0)
         x.append(x_n)
         c += y[i]
     return x
