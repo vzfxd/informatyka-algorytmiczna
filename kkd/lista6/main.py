@@ -58,7 +58,7 @@ def encode(low,high,bits):
     high_quantizer = tuple(nonuniform_quantizer(high_channel, bits, -255, 255) for high_channel in [high_r, high_g, high_b])
 
     z_r, z_g, z_b = ([quantizer[v] for v in high_channel] for quantizer, high_channel in zip(high_quantizer, [high_r, high_g, high_b]))
-    
+
     buff = ''.join(['1' + bin(abs(el))[2:].zfill(8) if el < 0 else '0' + bin(abs(el))[2:].zfill(8) for arr in [z_r, z_g, z_b, r_diff, g_diff, b_diff] for el in arr])
     return buff
 
@@ -80,21 +80,9 @@ def decode(file_in, file_out):
 
     r, g, b = (reconstruct_from_diff(diff, z) for diff, z in zip([r_diff, g_diff, b_diff], [z_r, z_g, z_b]))
 
-    r_w,g_w,b_w = [],[],[]
-    for y,z in zip(r,z_r):
-        p1 = max(min(y+z,255),0)
-        p2 = max(min(y-z,255),0)
-        r_w.extend([p1,p2])
-
-    for y,z in zip(g,z_g):
-        p1 = max(min(y+z,255),0)
-        p2 = max(min(y-z,255),0)
-        g_w.extend([p1,p2])
-
-    for y,z in zip(b,z_b):
-        p1 = max(min(y+z,255),0)
-        p2 = max(min(y-z,255),0)
-        b_w.extend([p1,p2])
+    r_w = [item for y, z in zip(r, z_r) for item in [max(min(y + z, 255), 0), max(min(y - z, 255), 0)]]
+    g_w = [item for y, z in zip(g, z_g) for item in [max(min(y + z, 255), 0), max(min(y - z, 255), 0)]]
+    b_w = [item for y, z in zip(b, z_b) for item in [max(min(y + z, 255), 0), max(min(y - z, 255), 0)]]
     
     bitmap = [channel for sublist in zip(r_w, g_w, b_w) for channel in sublist]
 
