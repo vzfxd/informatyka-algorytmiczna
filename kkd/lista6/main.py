@@ -84,30 +84,32 @@ def quantizer_encoding(bitmap, bits,diff=False):
     r_c, rc_idx = nonuniform_quantizer(r, bits, min, max)
     g_c, gc_idx = nonuniform_quantizer(g, bits, min, max)
     b_c, bc_idx = nonuniform_quantizer(b, bits, min, max)
-   
+    
     r_a = [rc_idx[c-min] for c in r]
     g_a = [gc_idx[c-min] for c in g]
     b_a = [bc_idx[c-min] for c in b]
     c_idx = r_a + g_a + b_a
-    
     buff = bin(bits)[2:].zfill(8) + ''.join([bin(len(c))[2:].zfill(8) for c in [r_c,g_c,b_c]])
     if(diff):
         buff += ''.join(['1' + bin(abs(c))[2:].zfill(8) if c<0 else '0' + bin(c)[2:].zfill(8) for c in r_c+g_c+b_c])
     else:
         buff += ''.join([bin(c)[2:].zfill(8) for c in r_c+g_c+b_c])
-
+    f = open("encoded.txt","w")
+    f.write(''.join([bin(c)[2:].zfill(bits) for c in c_idx]))
+    f.close()
     return buff + ''.join([bin(c)[2:].zfill(bits) for c in c_idx])
 
 def quantizer_decoding(file,diff=False):
     with open(file, "br") as f:
         header = list(map(int, f.read(18)))
+        padding = int.from_bytes(f.read(1),byteorder='big')
         bits = int.from_bytes(f.read(1),byteorder='big')
         r_c_amount = int.from_bytes(f.read(1),byteorder='big')
         g_c_amount = int.from_bytes(f.read(1),byteorder='big')
         b_c_amount = int.from_bytes(f.read(1),byteorder='big')
         buff = ''.join([bin(byte)[2:].zfill(8) for byte in f.read()])
-    
-    centroids = None
+        buff = buff[:len(buff)-padding]
+
     if(diff):
         centroid_bits = (r_c_amount + g_c_amount + b_c_amount) * 9
         centroids = [int(el[1:], 2) if el[0] == '0' else -int(el[1:], 2) for el in [buff[i:i+9] for i in range(0, centroid_bits, 9)]]
@@ -118,15 +120,16 @@ def quantizer_decoding(file,diff=False):
     r_c = [c for c in centroids[:r_c_amount]]
     g_c = [c for c in centroids[r_c_amount:r_c_amount + g_c_amount]]
     b_c = [c for c in centroids[r_c_amount + g_c_amount:]]
-
-    buff = buff[centroid_bits:]
-    c_idx = [int(buff[i:i+bits], 2) for i in range(0, len(buff), bits)]
     
+    buff = buff[centroid_bits:]
+    f = open("decoded.txt","w")
+    f.write(buff)
+    f.close()
+    c_idx = [int(buff[i:i+bits], 2) for i in range(0, len(buff), bits)]
     r = [r_c[idx] for idx in c_idx[:len(c_idx)//3]]
     g = [g_c[idx] for idx in c_idx[len(c_idx)//3 : 2*len(c_idx)//3]]
     b = [b_c[idx] for idx in c_idx[2*len(c_idx)//3:]]
 
-    bitmap = None
     if(diff):
         bitmap = [channel for sublist in 
             zip(get_colors_from_diff_list(r), get_colors_from_diff_list(g), get_colors_from_diff_list(b))
@@ -184,11 +187,12 @@ def nonuniform_quantizer(values, bits, min_p, max):
         if(c_idx+1<len(centroids) and abs(centroids[c_idx+1]-i) <= abs(centroids[c_idx]-i)):
             c_idx+=1
         labels[i-min_p] = c_idx
-    
     return centroids, labels
 
 def save_to_file(buff, header, file_out):
-    bytes_list = bytes([int(buff[i:i+8],2) for i in range(0, len(buff), 8)])
+    padding = 8 - len(buff)%8
+    buff += padding*'0'
+    bytes_list = bytes([padding]) + bytes([int(buff[i:i+8],2) for i in range(0, len(buff), 8)])
 
     with open(file_out, "bw") as f:
         f.write(bytes(header) + bytes_list)
