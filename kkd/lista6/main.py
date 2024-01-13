@@ -23,8 +23,8 @@ class Pixel:
 
 def filter(bitmap):
     color_channels = ['r', 'g', 'b']
-    result_lower = tuple([(channel[0], *[((channel[idx] + channel[idx-1]) // 2) for idx in range(1, len(channel),2)]) for channel in [Pixel.get_color_bitmap_1d(bitmap, color) for color in color_channels]])
-    result_upper = tuple([(channel[0], *[((channel[idx] - channel[idx-1]) // 2) for idx in range(1, len(channel),2)]) for channel in [Pixel.get_color_bitmap_1d(bitmap, color) for color in color_channels]])
+    result_lower = tuple([([((channel[idx] + channel[idx-1]) // 2) for idx in range(1, len(channel),2)]) for channel in [Pixel.get_color_bitmap_1d(bitmap, color) for color in color_channels]])
+    result_upper = tuple([([((channel[idx] - channel[idx-1]) // 2) for idx in range(1, len(channel),2)]) for channel in [Pixel.get_color_bitmap_1d(bitmap, color) for color in color_channels]])
     return result_lower, result_upper
 
 def reconstruct_from_diff(y,z):
@@ -38,6 +38,8 @@ def reconstruct_from_diff(y,z):
 
 def diff_list(colors,quant=None):
     c = colors[0]
+    if(quant != None):
+        c = quant[c]
     x = [c]
     for c2 in colors[1:]:
         d = c2 - c
@@ -68,7 +70,7 @@ def decode(file_in, file_out):
         padding = int.from_bytes(f.read(1),byteorder='big')
         width = header[13]*256+header[12]
         height = header[15]*256+header[14]
-        chunk = width*height//2+1
+        chunk = width*height//2
         buff = ''.join([bin(c)[2:].zfill(8) for c in f.read()])
         buff = buff[:len(buff)-padding]
 
@@ -80,9 +82,9 @@ def decode(file_in, file_out):
 
     r, g, b = (reconstruct_from_diff(diff, z) for diff, z in zip([r_diff, g_diff, b_diff], [z_r, z_g, z_b]))
 
-    r_w = [item for y, z in zip(r, z_r) for item in [max(min(y + z, 255), 0), max(min(y - z, 255), 0)]]
-    g_w = [item for y, z in zip(g, z_g) for item in [max(min(y + z, 255), 0), max(min(y - z, 255), 0)]]
-    b_w = [item for y, z in zip(b, z_b) for item in [max(min(y + z, 255), 0), max(min(y - z, 255), 0)]]
+    r_w = [item for y, z in zip(r, z_r) for item in [max(min(y - z, 255), 0), max(min(y + z, 255), 0)]]
+    g_w = [item for y, z in zip(g, z_g) for item in [max(min(y - z, 255), 0), max(min(y + z, 255), 0)]]
+    b_w = [item for y, z in zip(b, z_b) for item in [max(min(y - z, 255), 0), max(min(y + z, 255), 0)]]
     
     bitmap = [channel for sublist in zip(r_w, g_w, b_w) for channel in sublist]
 
