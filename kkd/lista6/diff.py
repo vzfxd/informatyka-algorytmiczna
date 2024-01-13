@@ -33,6 +33,8 @@ def calculate_mse_snr(image1, image2, color="all"):
     return mse/len(image1),snr
 
 def calculate_psnr(snr,mse,len):
+    if(mse == 0):
+        return 0
     return 10 * np.log10((snr/len)/mse)
 
 original,_ = read_tga(sys.argv[1])

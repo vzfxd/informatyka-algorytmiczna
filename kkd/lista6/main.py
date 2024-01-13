@@ -1,4 +1,5 @@
 import sys
+import huffman
 
 def read_tga(filename):
     with open(filename, "br") as f:
@@ -58,23 +59,31 @@ def encode(low,high,bits):
     r_diff, g_diff, b_diff = (diff_list(low_channel, quantizer) for low_channel, quantizer in zip([low_r, low_g, low_b], low_quantizer))
     
     high_quantizer = tuple(nonuniform_quantizer(high_channel, bits, -255, 255) for high_channel in [high_r, high_g, high_b])
-
     z_r, z_g, z_b = ([quantizer[v] for v in high_channel] for quantizer, high_channel in zip(high_quantizer, [high_r, high_g, high_b]))
 
-    buff = ''.join(['1' + bin(abs(el))[2:].zfill(8) if el < 0 else '0' + bin(abs(el))[2:].zfill(8) for arr in [z_r, z_g, z_b, r_diff, g_diff, b_diff] for el in arr])
-    return buff
+    data = z_r + z_g + z_b + r_diff + g_diff + b_diff
+    
+    number_probabilities = huffman.calculate_probabilities(data)
+    huffman_tree = huffman.build_huffman_tree(number_probabilities)
+    huffman_mapping = huffman.generate_huffman_codes(huffman_tree)
+
+    buff = huffman.huffman_encode(data, huffman_mapping)
+
+    return buff,huffman_mapping
 
 def decode(file_in, file_out):
     with open(file_in,"br") as f:
         header = list(map(int, f.read(18)))
         padding = int.from_bytes(f.read(1),byteorder='big')
+        huff_mapping = eval(f.readline().decode('utf-8'))
+        huffman_tree = huffman.build_tree_from_mapping(huff_mapping)
         width = header[13]*256+header[12]
         height = header[15]*256+header[14]
         chunk = width*height//2
         buff = ''.join([bin(c)[2:].zfill(8) for c in f.read()])
         buff = buff[:len(buff)-padding]
 
-    data = [int(el[1:], 2) if el[0] == '0' else -int(el[1:], 2) for el in [buff[i:i+9] for i in range(0, len(buff), 9)]]
+    data = huffman.huffman_decode(buff, huffman_tree)
     r_diff,g_diff,b_diff,z_r,z_g,z_b = [],[],[],[],[],[] 
     
     for i,el in enumerate([z_r,z_g,z_b,r_diff,g_diff,b_diff]):
@@ -142,10 +151,12 @@ def nonuniform_quantizer(values, bits, min_p, max):
     
     return approx
 
-def save_to_file(buff, header, file_out):
+def save_to_file(buff, header, file_out,huffman_mapping):
     padding = 8 - len(buff)%8
     buff += padding*'0'
-    bytes_list = bytes([padding]) + bytes([int(buff[i:i+8],2) for i in range(0, len(buff), 8)])
+    
+    
+    bytes_list = bytes([padding]) + bytes(str(huffman_mapping)+"\n", 'utf-8') + bytes([int(buff[i:i+8],2) for i in range(0, len(buff), 8)])
 
     with open(file_out, "bw") as f:
         f.write(bytes(header) + bytes_list)
@@ -158,8 +169,8 @@ def main():
     if sys.argv[1] == '-e':
         bitmap, header = read_tga(sys.argv[2])   
         low,high = filter(bitmap)
-        buff = encode(low,high,int(sys.argv[4]))
-        save_to_file(buff, header, sys.argv[3])
+        buff,huffman_mapping = encode(low,high,int(sys.argv[4]))
+        save_to_file(buff, header, sys.argv[3],huffman_mapping)
 
     if sys.argv[1] == '-d':
         decode(sys.argv[2],sys.argv[3])
