@@ -1,9 +1,11 @@
 package org.example;
 
+import org.example.lista4.Lista4;
+
 import java.io.IOException;
 
 public class Main {
     public static void main(String[] args) throws IOException {
-        Lista3.tabu(args[0]);
+        Lista4.run();
     }
 }

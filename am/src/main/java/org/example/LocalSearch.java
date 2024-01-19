@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class LocalSearch {
-    private static void invert(List<Integer> perm, int i, int j){
+    public static void invert(List<Integer> perm, int i, int j){
         while(i<j){
             int temp = perm.get(i);
             perm.set(i,perm.get(j));
@@ -14,7 +14,7 @@ public class LocalSearch {
         }
     }
 
-    private static int weightAfterInvert(List<Integer> perm, int i, int j, int[][] distMatrix, int currWeight){
+    public static int weightAfterInvert(List<Integer> perm, int i, int j, int[][] distMatrix, int currWeight){
         int n = perm.size();
 
         if(i == 0 && j==n-1){

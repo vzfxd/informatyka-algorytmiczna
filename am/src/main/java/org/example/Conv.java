@@ -5,10 +5,7 @@ import com.github.sh0nk.matplotlib4j.Plot;
 import com.github.sh0nk.matplotlib4j.PythonExecutionException;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class Conv {
     private final List<Integer> conv;
