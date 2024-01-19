@@ -21,9 +21,9 @@ public class PopulationSimulation{
     }
     public static int run(int[][] distMatrix, int V){
         Random random = new Random();
-        double mutation_chance = 0.1;
+        double mutation_chance = 0.2;
         double crossover_chance = 0.9;
-        int crossovers = V /5;
+        int crossovers = V/5;
 
         List<Individual> population = new ArrayList<>();
         MST mst = new MST(V);
