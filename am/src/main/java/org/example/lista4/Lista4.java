@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class Lista4 {
     public static void run() throws IOException, InterruptedException {
-        String filename = "bcl380.tsp";
+        String filename = "xit1083.tsp";
         FileHandler fh = new FileHandler("data/" + filename);
         Graph g = fh.makeGraph();
         int[][] distMatrix = g.calcDistMatrix();

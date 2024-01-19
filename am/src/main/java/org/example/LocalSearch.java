@@ -144,13 +144,13 @@ public class LocalSearch {
         return weight;
     }
 
-    public static int[] localSearch(List<Integer> perm, int[][] distMatrix){
+    public static int[] localSearch(List<Integer> perm, int[][] distMatrix, int w){
         int i_best = 0;
         int j_best = 0;
         int steps = 0;
         int n = perm.size();
-        int w = calcWeight(perm,distMatrix) + distMatrix[perm.get(n-1)][perm.get(0)];
-        while(true){
+        int n_sqrt = (int)Math.sqrt(n);
+        while(steps<n_sqrt){
             steps++;
             int best_neighor_w = w;
 
@@ -169,20 +169,19 @@ public class LocalSearch {
                 invert(perm,i_best,j_best);
                 w = best_neighor_w;
             }else{
-                perm.add(perm.get(0));
                 break;
             }
         }
-
+        perm.add(perm.get(0));
         return new int[]{steps,w};
     }
-    public static int[] localSearchFast(List<Integer> perm, int[][] distMatrix, int iters){
+    public static int[] localSearchFast(List<Integer> perm, int[][] distMatrix, int iters, int w){
         int i_best = 0;
         int j_best = 0;
         int steps = 0;
         int n = perm.size();
-        int w = calcWeight(perm,distMatrix) + distMatrix[perm.get(n-1)][perm.get(0)];
-        while(true){
+        int n_sqrt = (int)Math.sqrt(n);
+        while(steps<n_sqrt){
             steps++;
             int best_neighor_w = w;
 
@@ -202,11 +201,10 @@ public class LocalSearch {
                 invert(perm,i_best,j_best);
                 w = best_neighor_w;
             }else{
-                perm.add(perm.get(0));
                 break;
             }
         }
-
+        perm.add(perm.get(0));
         return new int[]{steps,w};
     }
 }

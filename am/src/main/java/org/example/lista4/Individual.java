@@ -3,7 +3,6 @@ package org.example.lista4;
 import org.example.LocalSearch;
 
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Individual implements Comparable<Individual>{
     private List<Integer> conv;
@@ -15,15 +14,9 @@ public class Individual implements Comparable<Individual>{
 
     public void mutation(int[][] distMatrix){
         int size = conv.size();
+        int prev_weight = this.weight;
         this.conv.remove(size-1);
-
-        int i = ThreadLocalRandom.current().nextInt(0, size-2);
-        int j = ThreadLocalRandom.current().nextInt(i+1, size-1);
-
-        this.weight = LocalSearch.weightAfterInvert(this.conv,i,j,distMatrix,this.weight);
-        LocalSearch.invert(this.conv,i,j);
-
-        this.conv.add(conv.get(0));
+        this.weight = LocalSearch.localSearchFast(this.conv,distMatrix,size-1,prev_weight)[1];
     }
 
     public List<Integer> getConv(){

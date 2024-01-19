@@ -28,20 +28,20 @@ public class Lista2 {
             int total_w = 0;
             int min_w = Integer.MAX_VALUE;
 
-            for(int i=0; i<sqrt_v; i++){
-                int randomV = ThreadLocalRandom.current().nextInt(0, V);
-                Conv conv = new Conv(parent,randomV);
-                List<Integer> perm = conv.getConv();
-                perm.remove(V);
-                int[] result = LocalSearch.localSearch(perm,distMatrix);
-                int s = result[0];
-                int w = result[1];
-                steps += s;
-                total_w += w;
-                if(w<min_w){
-                    min_w = w;
-                }
-            }
+//            for(int i=0; i<sqrt_v; i++){
+//                int randomV = ThreadLocalRandom.current().nextInt(0, V);
+//                Conv conv = new Conv(parent,randomV);
+//                List<Integer> perm = conv.getConv();
+//                perm.remove(V);
+//                int[] result = LocalSearch.localSearch(perm,distMatrix);
+//                int s = result[0];
+//                int w = result[1];
+//                steps += s;
+//                total_w += w;
+//                if(w<min_w){
+//                    min_w = w;
+//                }
+//            }
 
             String out_string = filename + " & ";
             out_string += mst.calcWeight(parent,distMatrix) + " & ";
@@ -76,24 +76,24 @@ public class Lista2 {
             int total_w = 0;
             int min_w = Integer.MAX_VALUE;
 
-            for(int i=0; i<iters; i++){
-                List<Integer> perm =  Conv.getRandomConv(V);
-                int[] result;
-                perm.remove(V);
-                if(fast) {
-                    result = LocalSearch.localSearchFast(perm,distMatrix,V);
-                }else {
-                    result = LocalSearch.localSearch(perm,distMatrix);
-                }
-
-                int s = result[0];
-                int w = result[1];
-                steps += s;
-                total_w += w;
-                if(w<min_w){
-                    min_w = w;
-                }
-            }
+//            for(int i=0; i<iters; i++){
+//                List<Integer> perm =  Conv.getRandomConv(V);
+//                int[] result;
+//                perm.remove(V);
+//                if(fast) {
+//                    result = LocalSearch.localSearchFast(perm,distMatrix,V);
+//                }else {
+//                    result = LocalSearch.localSearch(perm,distMatrix);
+//                }
+//
+//                int s = result[0];
+//                int w = result[1];
+//                steps += s;
+//                total_w += w;
+//                if(w<min_w){
+//                    min_w = w;
+//                }
+//            }
 
             String out_string = "";
             out_string += total_w/iters + " & ";
