@@ -11,7 +11,7 @@ public class PopulationSimulation{
 
         List<Individual> selected = new ArrayList<>(population);
         Collections.shuffle(selected);
-        selected = selected.subList(0,crossovers);
+        selected = new ArrayList<>(selected.subList(0, crossovers));
         Collections.sort(selected);
 
         parents.add(selected.get(0));

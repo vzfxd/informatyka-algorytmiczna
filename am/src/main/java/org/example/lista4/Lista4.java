@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class Lista4 {
     public static void run() throws IOException, InterruptedException {
-        String filename = "xqf131.tsp";
+        String filename = "xql662.tsp";
         FileHandler fh = new FileHandler("data/" + filename);
         Graph g = fh.makeGraph();
         int[][] distMatrix = g.calcDistMatrix();
@@ -22,6 +22,7 @@ public class Lista4 {
             }
             ov += w;
             System.out.println("iteracja " + i);
+            System.out.println(w);
         }
 
         System.out.println(ov/r);
