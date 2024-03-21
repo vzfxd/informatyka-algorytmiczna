@@ -1,8 +1,6 @@
-jednokrotnie(X, [X|T]) :-
-    \+ member(X, T).
-
-jednokrotnie(X, [_|T]) :-
-    jednokrotnie(X, T).
+jednokrotnie(X, L) :-
+    select(X,L,L1),
+	\+ member(X,L1).
 
 dwukrotnie(X, L) :-
 	append(L1, [X|T], L),
