@@ -1,4 +1,4 @@
-all: ada_test c_test c_in_python ada_in_c python_in_c
+all: ada_test c_test c_in_python ada_in_c python_in_c c_in_ada
 
 ada_test: libs/biblio.adb
 	gnatmake -Ilibs/ -o ada_test.out tests.adb
@@ -17,6 +17,10 @@ ada_in_c: ada_in_c.c libs/biblio.adb
 
 python_in_c: python_in_c.c libs/biblio.py
 	gcc -o python_in_c.out python_in_c.c -I/usr/include/python3.10 -lpython3.10
+
+c_in_ada: libs/biblio.c c_in_ada_test.adb
+	gcc -c libs/biblio.c
+	gnatmake -Ilibs/ c_in_ada_test.adb -o c_in_ada.out -largs biblio.o
 
 clean:
 	@rm -rf *.out *.ali *.o b~* *.so
