@@ -24,9 +24,9 @@ package biblio is
     pragma Export(C, GCD_Recursive, "ada_gcd_recursive");
 
     function Diophantine_Solution_Iterative(A, B, C: Int64) return Coefficients;
-    pragma Export(C, Diophantine_Solution_Iterative, "ada_diophantine_equation_iterative");
+    pragma Export(C, Diophantine_Solution_Iterative, "ada_diophantine_solution_iterative");
 
     function Diophantine_Solution_Recursive(A, B, C: Int64) return Coefficients;
-    pragma Export(C, Diophantine_Solution_Recursive, "ada_diophantine_equation_recursive");
+    pragma Export(C, Diophantine_Solution_Recursive, "ada_diophantine_solution_recursive");
 
 end biblio;
