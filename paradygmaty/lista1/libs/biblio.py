@@ -36,8 +36,8 @@ def extended_gcd_iterative(a, b):
         y0, y1 = y1, y0 - q * y1
     return a, x0, y0
 
-def diophantine_solution(a, b, c, gcd_func):
-    gcd, x0, y0 = gcd_func(a, b)
+def diophantine_solution_iterative(a, b, c):
+    gcd, x0, y0 = extended_gcd_iterative(a, b)
     if c % gcd != 0:
         return None
     else:
@@ -45,12 +45,13 @@ def diophantine_solution(a, b, c, gcd_func):
         x = x0 * factor
         y = y0 * factor
         return x, y
-
-def main():
-    print(factorial_recursive(3))
-    print(factorial_iterative(3))
-    print(gcd_iterative(54,36))
-    print(gcd_recursive(54,36))
-
-if __name__ == "__main__":
-    main()
+    
+def diophantine_solution_recursive(a, b, c):
+    gcd, x0, y0 = extended_gcd_recursive(a, b)
+    if c % gcd != 0:
+        return None
+    else:
+        factor = c // gcd
+        x = x0 * factor
+        y = y0 * factor
+        return x, y

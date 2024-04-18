@@ -1,12 +1,12 @@
 #ifndef biblio
 #define biblio
 
-#include "stddef.h"
+#include "stdint.h"
+#include <stddef.h>
 
 struct coefficients {
-    int a;
-    int b;
-    int c;
+    int x;
+    int y;
 };
 
 size_t factorial_iterative(size_t n)
@@ -46,27 +46,27 @@ size_t gcd_recursive(size_t a, size_t b)
         return gcd_recursive(b, a % b);
 }
 
-size_t extended_gcd_recursive(int a, int b, int *x, int *y)
+int64_t extended_gcd_recursive(int64_t a, int64_t b, int64_t *x, int64_t *y)
 {
     if (b == 0) {
         *x = 1;
         *y = 0;
         return a;
     } else {
-        int x1, y1;
-        size_t d = extended_gcd_recursive(b, a % b, &x1, &y1);
+        int64_t x1, y1;
+        int64_t d = extended_gcd_recursive(b, a % b, &x1, &y1);
         *x = y1;
         *y = x1 - (a / b) * y1;
         return d;
     }
 }
 
-size_t extended_gcd_iterative(int a, int b, int *x, int *y)
+int64_t extended_gcd_iterative(int64_t a, int64_t b, int64_t *x, int64_t *y)
 {
-    int x0 = 1, y0 = 0, x1 = 0, y1 = 1;
+    int64_t x0 = 1, y0 = 0, x1 = 0, y1 = 1;
     while (b != 0) {
-        int q = a / b;
-        int temp = b;
+        int64_t q = a / b;
+        int64_t temp = b;
         b = a % b;
         a = temp;
         temp = x1;
@@ -81,18 +81,36 @@ size_t extended_gcd_iterative(int a, int b, int *x, int *y)
     return a;
 }
 
-void diophantine_solution(int a, int b, int c, size_t (*gcd_func)(int,int,int,int))
+struct coefficients diophantine_solution_recursive(int64_t a, int64_t b, int64_t c)
 {
-    int x, y;
-    int d = gcd_func(a, b, &x, &y);
-    if (c % d != 0) {
-        printf("No solution exists for the given equation.\n");
-    } else {
-        int factor = c / d;
+    struct coefficients coeffs;
+    int64_t x, y;
+    int64_t d = extended_gcd_recursive(a, b, &x, &y);
+    if (c % d == 0) {
+        int64_t factor = c / d;
         x *= factor;
         y *= factor;
-        printf("x = %d, y = %d is a solution to %dx + %dy = %d\n", x, y, a, b, c);
+        coeffs.x = x;
+        coeffs.y = y;
     }
+
+    return coeffs;
+}
+
+struct coefficients diophantine_solution_iterative(int64_t a, int64_t b, int64_t c)
+{
+    struct coefficients coeffs;
+    int64_t x, y;
+    int64_t d = extended_gcd_iterative(a, b, &x, &y);
+    if (c % d == 0) {
+        int64_t factor = c / d;
+        x *= factor;
+        y *= factor;
+        coeffs.x = x;
+        coeffs.y = y;
+    }
+
+    return coeffs;
 }
 
 #endif
