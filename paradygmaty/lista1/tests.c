@@ -14,5 +14,5 @@ int main(void)
 
     printf("3! || %ld, %ld\n", f, f2);
     printf("gcd(54,36) || %ld, %ld\n", g, g2);
-    printf("10x + 6y = 14 || %d, %d || %d, %d\n", c.x, c.y, c2.x, c2.y);
+    printf("10x + 6y = 14 || %ld, %ld || %ld, %ld\n", c.x, c.y, c2.x, c2.y);
 }

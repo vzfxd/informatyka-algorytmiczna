@@ -1,0 +1,113 @@
+V "GNAT Lib v10"
+P ZX
+
+RN
+RV NO_RECURSION
+RV SPARK_05
+
+U biblio%b		biblio.adb		b9587aa1 NE OO PK
+
+U biblio%s		biblio.ads		ba3c0f48 EE NE OO PK IL
+W interfaces%s		interfac.ads		interfac.ali
+W interfaces.c%s	i-c.adb			i-c.ali
+
+D ada.ads		20230707070819 76789da1 ada%s
+D a-unccon.ads		20230707070819 0e9b276f ada.unchecked_conversion%s
+D biblio.ads		20240418153631 ee1d1ed3 biblio%s
+D biblio.adb		20240418153925 57456472 biblio%b
+D interfac.ads		20230707070819 5ab55268 interfaces%s
+D i-c.ads		20230707070819 5421119b interfaces.c%s
+D system.ads		20230707070819 4635ec04 system%s
+D s-exctab.ads		20230707070819 54135002 system.exception_table%s
+D s-parame.ads		20230707070819 48ec542b system.parameters%s
+D s-stalib.ads		20230707070819 09bd3940 system.standard_library%s
+G a e
+G c Z s b [factorial_iterative biblio 14 14 none]
+G c Z s b [factorial_recursive biblio 17 14 none]
+G c Z s b [gcd_iterative biblio 20 14 none]
+G c Z s b [gcd_recursive biblio 23 14 none]
+G c Z s b [diophantine_solution_iterative biblio 26 14 none]
+G c Z s b [diophantine_solution_recursive biblio 29 14 none]
+G c Z s s [coefficientsIP biblio 8 10 none]
+G c Z b b [extended_gcd_recursive biblio 45 13 none]
+G c Z b b [extended_gcd_iterative biblio 66 13 none]
+X 3 biblio.ads
+3K9*biblio 32l5 32e11 4|1b14 129l5 129t11
+5I13*Int64{6|37I9} 9r13 10r13 26r54 29r54 4|45r43 45r61 45r75 53r22 56r20
+. 66r43 66r61 66r75 67r33 68r16 93r54 95r14 96r11 100r22 111r54 113r14 114r11
+. 118r22
+6M13*UInt64{6|45M9} 14r38 14r53 17r38 17r53 20r35 20r50 23r35 23r50 4|3r37
+. 3r52 4r16 12r37 12r52 21r34 21r49 22r16 23r14 24r14 36r34 36r49
+8R10*Coefficients 11e15 12r26 26r68 29r68 4|93r68 94r16 111r68 112r16
+9i9*X{5I13} 4|104m20 122m20
+10i9*Y{5I13} 4|105m20 123m20
+14V14*Factorial_Iterative{6M13} 14>34 15i<c,ada_factorial_iterative>22 4|3b13
+. 10l8 10t27
+14m34 N{6M13} 4|3b33 6r21
+17V14*Factorial_Recursive{6M13} 17>34 18i<c,ada_factorial_recursive>22 4|12b13
+. 17s21 19l8 19t27
+17m34 N{6M13} 4|12b33 14r10 15r17 17r17 17r41
+20V14*GCD_Iterative{6M13} 20>28 20>31 21i<c,ada_gcd_iterative>22 4|21b13
+. 34l9 34t22
+20m28 A{6M13} 4|21b27 26r15
+20m31 B{6M13} 4|21b30 27r15
+23V14*GCD_Recursive{6M13} 23>28 23>31 24i<c,ada_gcd_recursive>22 4|36b13
+. 41s17 43l8 43t21
+23m28 A{6M13} 4|36b27 39r17 41r34
+23m31 B{6M13} 4|36b30 38r10 41r31 41r40
+26V14*Diophantine_Solution_Iterative{8R10} 26>45 26>48 26>51 27i<c,ada_diophantine_equation_iterative>22
+. 4|111b13 127l8 127t38
+26i45 A{5I13} 4|111b44 114r43
+26i48 B{5I13} 4|111b47 114r46
+26i51 C{5I13} 4|111b50 116r10 118r31
+29V14*Diophantine_Solution_Recursive{8R10} 29>45 29>48 29>51 30i<c,ada_diophantine_equation_recursive>22
+. 4|93b13 109l8 109t38
+29i45 A{5I13} 4|93b44 96r43
+29i48 B{5I13} 4|93b47 96r46
+29i51 C{5I13} 4|93b50 98r10 100r31
+X 4 biblio.adb
+4m7 Result{3|6M13} 7m10 7r20 9r14
+6m11 I{6|45M9} 7r29
+22m9 Temp{3|6M13} 29m13 31r19
+23m9 A2{3|6M13} 26m9 30r19 31m13 33r16
+24m9 B2{3|6M13} 27m9 28r15 29r21 30m13 30r26
+45V13 Extended_GCD_Recursive{3|5I13} 45b13 45>36 45>39 45<50 45<53 56s29
+. 64l8 64t30 96s20
+45i36 A{3|5I13} 50r17 56r55 59r27
+45i39 B{3|5I13} 47r10 56r52 56r61 59r31
+45i50 X{3|5I13} 48m10 58m16
+45i53 Y{3|5I13} 49m10 59m16
+53i13 X1{3|5I13} 56m64 56r64 59r21
+53i17 Y1{3|5I13} 56m68 56r68 58r21 59r36
+56i16 D{3|5I13} 60r23
+66V13 Extended_GCD_Iterative{3|5I13} 66b13 66>36 66>39 66<50 66<53 91l8 91t30
+. 114s20
+66i36 A{3|5I13} 74r13
+66i39 B{3|5I13} 75r13
+66i50 X{3|5I13} 88m7
+66i53 Y{3|5I13} 89m7
+67i7 X0{3|5I13} 70m7 82r16 83m10 88r12
+67i11 Y0{3|5I13} 71m7 85r16 86m10 89r12
+67i15 X1{3|5I13} 72m7 81r18 82m10 82r25
+67i19 Y1{3|5I13} 73m7 84r18 85m10 85r25
+67i23 Temp{3|5I13} 78m10 80r16 81m10 83r16 84m10 86r16
+67i29 Q{3|5I13} 77m10 82r21 85r21
+68i7 A2{3|5I13} 74m7 77r15 79r16 80m10 90r14
+68i11 B2{3|5I13} 75m7 76r13 77r20 78r18 79m10 79r23
+94r7 Coeffs{3|8R10} 104m13 105m13 108r14
+95i7 X{3|5I13} 96m49 96r49 102m13 102r18 104r25
+95i10 Y{3|5I13} 96m52 96r52 103m13 103r18 105r25
+96i7 D{3|5I13} 98r16 100r35
+100i13 Factor{3|5I13} 102r22 103r22
+112r7 Coeffs{3|8R10} 122m13 123m13 126r14
+113i7 X{3|5I13} 114m49 114r49 120m13 120r18 122r25
+113i10 Y{3|5I13} 114m52 114r52 121m13 121r18 123r25
+114i7 D{3|5I13} 116r16 118r35
+118i13 Factor{3|5I13} 120r22 121r22
+X 5 interfac.ads
+38K9*Interfaces 3|1r6 1r24 5r22 6r23 5|184e15
+X 6 i-c.ads
+18K20*C 3|1w17 1r35 5r33 6r34 6|230e17
+37I9*long<long_integer> 3|5r35
+45M9*unsigned_long 3|6r36
+
