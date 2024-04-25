@@ -39,8 +39,8 @@ print(f"a *= b || a = {a}")
 print(f"a == c {a == c}")
 print(f"a > b {a > b}")
 print(f"a >= b {a >= b}")
-print(f"b < a {a < b}")
-print(f"b <= a {a <= b}")
+print(f"a < b {a < b}")
+print(f"a <= b {a <= b}")
 
 
 # Division

@@ -45,7 +45,6 @@ class GF:
     def __truediv__(self, other):
         GF.__check_err(self, other)
         gcd, x, _ = GF.__euklides(other.val, other.characteristic)
-    
         if(gcd != 1):
             return -1
         
