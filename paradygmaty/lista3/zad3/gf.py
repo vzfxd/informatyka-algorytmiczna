@@ -25,7 +25,10 @@ class GF:
         return self.val >= other.val
 
     def __eq__(self, other):
-        return self.val == other.val
+        if isinstance(other, GF):
+            return self.val == other.val
+        elif isinstance(other, int):
+            return self.val == other
 
     def __ne__(self, other):
         return self.val != other.val
@@ -37,7 +40,10 @@ class GF:
         return GF( (self.val + (-other.val % GF.characteristic) ) % GF.characteristic )
 
     def __mul__(self, other):
-        return GF( (self.val * other.val ) % GF.characteristic )
+        if isinstance(other, GF):
+            return GF(self.val * other.val)
+        elif isinstance(other, int):
+            return GF(self.val * (other % GF.characteristic))
 
     def __truediv__(self, other):
         gcd, x, _ = GF.__euklides(other.val, GF.characteristic)

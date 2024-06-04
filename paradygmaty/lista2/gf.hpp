@@ -7,7 +7,7 @@
 class GF {
 private:
     int64_t val;
-    int64_t characteristic;
+    inline static int64_t characteristic;
 
     int64_t extended_gcd_recursive(int64_t a, int64_t b, int64_t *x, int64_t *y) const
     {
@@ -24,111 +24,98 @@ private:
         }
     }
 
-    static void check_err(const GF& c1, const GF& c2) {
-        if (c1.characteristic != c2.characteristic)
-            throw std::invalid_argument("Characteristics of GF elements do not match.");
-    }
-
 public:
-    GF(int64_t val, int64_t characteristic = 1234577) : val(val % characteristic), characteristic(characteristic) {}
-
+    GF() {}
+    GF(int64_t val) {this->val = val % GF::characteristic;}
+    
     int64_t getVal() const { return val; }
-    int64_t getCharacteristic() const { return characteristic; }
+    static int64_t get_characteristic() { return GF::characteristic; }
+    static void set_characteristic(int64_t c) { GF::characteristic = c; }
 
     bool operator<(const GF& other) const {
-        check_err(*this, other);
         return val < other.val;
     }
 
     bool operator>(const GF& other) const {
-        check_err(*this, other);
         return val > other.val;
     }
 
     bool operator<=(const GF& other) const {
-        check_err(*this, other);
         return val <= other.val;
     }
 
     bool operator>=(const GF& other) const {
-        check_err(*this, other);
         return val >= other.val;
     }
 
     bool operator==(const GF& other) const {
-        check_err(*this, other);
         return val == other.val;
     }
 
     bool operator!=(const GF& other) const {
-        check_err(*this, other);
         return val != other.val;
     }
 
     GF operator+(const GF& other) const {
-        check_err(*this, other);
-        return GF((val + other.val) % characteristic, characteristic);
+        return GF((val + other.val) % GF::characteristic);
     }
 
     GF operator-(const GF& other) const {
-        check_err(*this, other);
-        return GF((val + (other.characteristic - other.val)) % characteristic, characteristic);
+        return GF((val + (GF::characteristic - other.val)) % GF::characteristic);
     }
 
     GF operator*(const GF& other) const {
-        check_err(*this, other);
-        return GF((val * other.val) % characteristic, characteristic);
+        return GF((val * other.val) % GF::characteristic);
     }
 
     GF operator/(const GF& other) const {
-        check_err(*this, other);
         int64_t x,y;
-        int64_t gcd = extended_gcd_recursive(other.val, other.characteristic ,&x,&y);
+        int64_t gcd = extended_gcd_recursive(other.val, GF::characteristic ,&x,&y);
         
         if (gcd != 1)
             throw std::invalid_argument("err");
 
         if(x < 0){
-            x = other.characteristic - abs(x);
+            x = GF::characteristic - abs(x);
         }
 
-        return GF((val * (x % other.characteristic)) % characteristic, characteristic);
+        return GF((val * (x % GF::characteristic)) % GF::characteristic);
     }
 
     GF& operator+=(const GF& other) {
-        val = (val + other.val) % characteristic;
+        val = (val + other.val) % GF::characteristic;
         return *this;
     }
 
     GF& operator-=(const GF& other) {
-        val = (val + (characteristic - other.val)) % characteristic;
+        val = (val + (GF::characteristic - other.val)) % GF::characteristic;
         return *this;
     }
 
     GF& operator*=(const GF& other) {
-        val = (val * other.val) % characteristic;
+        val = (val * other.val) % GF::characteristic;
         return *this;
     }
 
     GF& operator/=(const GF& other) {
         int64_t x,y;
-        int64_t gcd = extended_gcd_recursive(other.val, other.characteristic,&x,&y);
+        int64_t gcd = extended_gcd_recursive(other.val, GF::characteristic,&x,&y);
         if(x < 0){
-            x = other.characteristic - abs(x);
+            x = GF::characteristic - abs(x);
         }
-        val = (val * (x % other.characteristic)) % characteristic;
+        val = (val * (x % GF::characteristic)) % GF::characteristic;
         return *this;
     }
 
     std::ostream& operator<<(std::ostream& os) {
-        os << val << "," << characteristic;
+        os << val << "," << GF::characteristic;
         return os;
     }
 };
 
 std::ostream& operator<<(std::ostream& os, const GF& gf)
 {
-    os << gf.getVal() << ',' << gf.getCharacteristic();
+    os << gf.getVal();
     return os;
 }
 
