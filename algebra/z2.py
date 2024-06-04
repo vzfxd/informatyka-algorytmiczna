@@ -3,6 +3,9 @@ class CustomPoly:
         self.coeffs = coeffs
         self.degree = len(coeffs) - 1
 
+    def __eq__(self, other):
+        return self.coeffs == other.coeffs and self.degree == other.degree
+    
     def __str__(self):
         return str(self.coeffs)
 
@@ -65,10 +68,21 @@ class CustomPoly:
     def lcm(p, q):
         return p*q // CustomPoly.gcd(p, q)
     
-p1 = CustomPoly([1, 0, 1])
-p2 = CustomPoly([1, 2, 1]) 
+    def extended_gcd(a, b):
+        print(f"{a},{b},{CustomPoly([0])}")
+        if(b.degree == 0 and b.coeffs[0]==0):
+            return (a,CustomPoly([1]),CustomPoly([0]))
+        qr = a / b
+        q = qr[0]
+        r = qr[1]
+        d, s, t = CustomPoly.extended_gcd(b,r)
+        return (d, t, s - q*t)
+    
+if __name__ == "__main__":
+    p1 = CustomPoly([1, 0, 1])
+    p2 = CustomPoly([1, 2, 1]) 
 
-print("c:", CustomPoly.gcd(p1, p2))
-print("d:", CustomPoly.lcm(p1, p2))
+    print("c:", CustomPoly.gcd(p1, p2))
+    print("d:", CustomPoly.lcm(p1, p2))
 
 
