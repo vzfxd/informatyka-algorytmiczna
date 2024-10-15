@@ -1,4 +1,3 @@
-
 interpreter(INSTRUKCJE) :-
 	interpreter(INSTRUKCJE, []).
 
